@@ -25,7 +25,7 @@ services:
 
   vector_db:
     container_name: chroma
-    image: chromadb/chroma:latest
+    image: ghcr.io/chroma-core/chroma
     volumes:
       - ./vector_db/data:/chroma/data
     ports:
@@ -34,19 +34,21 @@ services:
   label_studio:
     container_name: label_studio
     image: heartexlabs/label-studio:latest
-    env_file:
-      - .env
-    volumes:
-      - ./label_studio/data:/label-studio/data
     ports:
       - '8080:8080'
+    volumes:
+      - ./label_studio/data:/label-studio/data
+    env_file:
+      - .env
 
   great_expectations:
     container_name: great_expectations
-    image: greatexpectations/great_expectations
+    image: python:3.10-slim
+    working_dir: /gx
     volumes:
       - ./great_expectations/expectations:/gx/expectations
       - ./great_expectations/data_docs:/gx/uncommitted/data_docs
+    command: tail -f /dev/null
     ports:
       - '5050:80'
 

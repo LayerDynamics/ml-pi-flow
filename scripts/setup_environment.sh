@@ -19,8 +19,8 @@ apt-get update -y
 echo "🔧 Installing system packages..."
 apt-get install -y docker.io docker-compose nginx certbot python3-pip
 
-echo "👤 Adding 'ryan' to docker group..."
-usermod -aG docker ryan
+echo "👤 Adding 'pi' to docker group..."
+usermod -aG docker pi
 
 echo "🔌 Enabling & starting Docker service..."
 systemctl enable docker

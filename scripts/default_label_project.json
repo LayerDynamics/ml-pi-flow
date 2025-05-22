@@ -1,0 +1,4 @@
+{
+    "title": "Default Dataset Annotation",
+    "label_config": "<View><Image name=\"image\" value=\"$image_url\"/><Choices name=\"label\" toName=\"image\"><Choice value=\"ClassA\"/><Choice value=\"ClassB\"/></Choices></View>"
+}

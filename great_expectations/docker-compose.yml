@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  great_expectations:
+    image: greatexpectations/great_expectations
+    volumes:
+      - ./expectations:/gx/expectations
+      - ./data_docs:/gx/uncommitted/data_docs
+    ports:
+      - "5050:80"

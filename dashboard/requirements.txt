@@ -1,0 +1,7 @@
+streamlit
+pandas
+mlflow
+tensorboard
+requests
+chromadb
+beautifulsoup4

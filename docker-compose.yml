@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  mlflow:
+    container_name: mlflow
+    build: ./mlflow
+    env_file:
+      - .env
+    volumes:
+      - ./mlflow/storage:/mlflow/storage
+    ports:
+      - '5000:5000'
+
+  tensorboard:
+    container_name: tensorboard
+    image: tensorflow/tensorflow:latest
+    command: tensorboard --logdir /tensorboard/logs --host 0.0.0.0
+    volumes:
+      - ./tensorboard/logs:/tensorboard/logs
+    ports:
+      - '6006:6006'
+
+  vector_db:
+    container_name: chroma
+    image: chromadb/chroma:latest
+    volumes:
+      - ./vector_db/data:/chroma/data
+    ports:
+      - '8000:8000'
+
+  label_studio:
+    container_name: label_studio
+    image: heartexlabs/label-studio:latest
+    env_file:
+      - .env
+    volumes:
+      - ./label_studio/data:/label-studio/data
+    ports:
+      - '8080:8080'
+
+  great_expectations:
+    container_name: great_expectations
+    image: greatexpectations/great_expectations
+    volumes:
+      - ./great_expectations/expectations:/gx/expectations
+      - ./great_expectations/data_docs:/gx/uncommitted/data_docs
+    ports:
+      - '5050:80'
+
+  dashboard:
+    container_name: dashboard
+    build: ./dashboard
+    volumes:
+      - ./dashboard:/app
+    ports:
+      - '9000:9000'
+    command: streamlit run app.py --server.port=9000 --server.address=0.0.0.0
+
+  web_portal:
+    container_name: web_portal
+    build: ./web_portal
+    volumes:
+      - ./web_portal:/app
+    ports:
+      - '9090:9090'
+    command: uvicorn main:app --host 0.0.0.0 --port 9090
+
+volumes:
+  mlflow_storage:
+  tensorboard_logs:
+  vector_db_data:
+  label_studio_data:
+  great_expectations_docs:

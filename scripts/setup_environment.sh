@@ -6,7 +6,7 @@ set -euo pipefail
 
 # Ensure .env is present
 if [[ ! -f /home/pi/ml-pi-flow/.env ]]; then
-  echo ".env file not found in /home/ryan/ml_platform. Copy .env.example and fill in values."
+  echo ".env file not found in /home/pi/ml-pi-flow. Copy .env.example and fill in values."
   exit 1
 fi
 

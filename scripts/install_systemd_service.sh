@@ -12,12 +12,13 @@ After=docker.service
 [Service]
 Type=oneshot
 RemainAfterExit=true
-WorkingDirectory=/home/ryan/ml_platform
+WorkingDirectory=/home/pi/ml-pi-flow
+EnvironmentFile=/home/pi/ml-pi-flow/.env
 ExecStart=/usr/local/bin/docker-compose up -d
 ExecStop=/usr/local/bin/docker-compose down
 TimeoutStartSec=0
-User=ryan
-Group=ryan
+User=pi
+Group=pi
 
 [Install]
 WantedBy=multi-user.target

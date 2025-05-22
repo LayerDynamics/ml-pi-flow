@@ -1,78 +1,157 @@
-version: '3.8'
+version: "3.8"
 
 services:
+  reverse_proxy:
+    image: nginx:alpine
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/letsencrypt:ro
+      - ./nginx/html:/usr/share/nginx/html
+    depends_on:
+      - dashboard
+      - web_portal
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./nginx/certs:/etc/letsencrypt
+      - ./nginx/html:/usr/share/nginx/html
+    entrypoint: >
+      certbot certonly --webroot
+      --webroot-path=/usr/share/nginx/html
+      --email ${CERTBOT_EMAIL}
+      --agree-tos
+      --no-eff-email
+      -d ${DOMAIN}
+    restart: "no"
+
   mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
     container_name: mlflow
-    image: ghcr.io/mlflow/mlflow
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    environment:
+      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
     command: >
       mlflow server
-        --backend-store-uri sqlite:///mlflow.db
-        --default-artifact-root /mlflow/storage
-        --host 0.0.0.0
-    volumes:
-      - ./mlflow/storage:/mlflow/storage
-    ports:
-      - '5000:5000'
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   tensorboard:
+    image: tensorflow/tensorflow:latest-arm64
     container_name: tensorboard
-    image: tensorflow/tensorflow:latest
-    command: tensorboard --logdir /tensorboard/logs --host 0.0.0.0
-    volumes:
-      - ./tensorboard/logs:/tensorboard/logs
     ports:
-      - '6006:6006'
+      - "6006:6006"
+    volumes:
+      - tensorboard_logs:/logs
+    command: >
+      tensorboard
+      --logdir=/logs
+      --host=0.0.0.0
+      --port=6006
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6006"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   vector_db:
+    image: ghcr.io/chroma-core/chroma:latest
     container_name: chroma
-    image: ghcr.io/chroma-core/chroma
-    volumes:
-      - ./vector_db/data:/chroma/data
     ports:
-      - '8000:8000'
+      - "8000:8000"
+    volumes:
+      - chroma_data:/data
+    environment:
+      - IS_PERSISTENT=true
+      - PERSIST_DIRECTORY=/data
+    restart: unless-stopped
 
   label_studio:
-    container_name: label_studio
     image: heartexlabs/label-studio:latest
+    container_name: label_studio
     ports:
-      - '8080:8080'
+      - "${LABEL_STUDIO_PORT}:${LABEL_STUDIO_PORT}"
     volumes:
-      - ./label_studio/data:/label-studio/data
-    env_file:
-      - .env
+      - label_studio_data:/label-studio/data
+    environment:
+      - LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=${LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED}
+      - LABEL_STUDIO_HOST=${LABEL_STUDIO_HOST}
+      - LABEL_STUDIO_PORT=${LABEL_STUDIO_PORT}
+      - LABEL_STUDIO_API_KEY=${LABEL_STUDIO_API_KEY}
+    user: "1000:1000"
+    command: >
+      label-studio start
+      --port ${LABEL_STUDIO_PORT}
+      --host ${LABEL_STUDIO_HOST}
+    restart: unless-stopped
 
   great_expectations:
+    image: ghcr.io/greatexpectations/great_expectations:latest
     container_name: great_expectations
-    image: python:3.10-slim
-    working_dir: /gx
-    volumes:
-      - ./great_expectations/expectations:/gx/expectations
-      - ./great_expectations/data_docs:/gx/uncommitted/data_docs
-    command: tail -f /dev/null
     ports:
-      - '5050:80'
+      - "4000:4000"
+    volumes:
+      - great_expectations_data:/app/great_expectations
+    working_dir: /app/great_expectations
+    command: tail -f /dev/null  # TODO: Replace with real GE entrypoint
+    restart: unless-stopped
 
   dashboard:
     container_name: dashboard
-    build: ./dashboard
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000"
     volumes:
       - ./dashboard:/app
-    ports:
-      - '9000:9000'
     command: streamlit run app.py --server.port=9000 --server.address=0.0.0.0
+    restart: unless-stopped
 
   web_portal:
     container_name: web_portal
-    build: ./web_portal
+    build:
+      context: ./web_portal
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
     volumes:
       - ./web_portal:/app
-    ports:
-      - '9090:9090'
     command: uvicorn main:app --host 0.0.0.0 --port 9090
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
 volumes:
-  mlflow_storage:
+  mlflow_data:
   tensorboard_logs:
-  vector_db_data:
+  chroma_data:
   label_studio_data:
-  great_expectations_docs:
+  great_expectations_data:
+
+networks:
+  default:
+    driver: bridge
+    # implement the configuration for exposing the services to the internet
+    # using a reverse proxy (nginx) and SSL certificates (certbot)

@@ -11,6 +11,8 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/certs:/etc/letsencrypt:ro
       - ./nginx/html:/usr/share/nginx/html
+    environment:
+      - DOMAIN=${DOMAIN:-example.com}
     depends_on:
       - dashboard
       - web_portal
@@ -54,7 +56,7 @@ services:
     restart: unless-stopped
 
   tensorboard:
-    image: tensorflow/tensorflow:latest-arm64
+    image: tensorflow/tensorflow:2.15.0
     container_name: tensorboard
     ports:
       - "6006:6006"
@@ -104,14 +106,21 @@ services:
     restart: unless-stopped
 
   great_expectations:
-    image: ghcr.io/greatexpectations/great_expectations:latest
+    build:
+      context: ./great_expectations
+      dockerfile: Dockerfile
     container_name: great_expectations
     ports:
       - "4000:4000"
     volumes:
       - great_expectations_data:/app/great_expectations
     working_dir: /app/great_expectations
-    command: tail -f /dev/null  # TODO: Replace with real GE entrypoint
+    command: >
+      /bin/bash -c "
+      great_expectations docs build &&
+      cd uncommitted/data_docs/local_site &&
+      python3 -m http.server 4000 --bind 0.0.0.0
+      "
     restart: unless-stopped
 
   dashboard:
@@ -153,5 +162,3 @@ volumes:
 networks:
   default:
     driver: bridge
-    # implement the configuration for exposing the services to the internet
-    # using a reverse proxy (nginx) and SSL certificates (certbot)

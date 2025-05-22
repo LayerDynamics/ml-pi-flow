@@ -3,9 +3,12 @@ version: '3.8'
 services:
   mlflow:
     container_name: mlflow
-    build: ./mlflow
-    env_file:
-      - .env
+    image: ghcr.io/mlflow/mlflow
+    command: >
+      mlflow server
+        --backend-store-uri sqlite:///mlflow.db
+        --default-artifact-root /mlflow/storage
+        --host 0.0.0.0
     volumes:
       - ./mlflow/storage:/mlflow/storage
     ports:

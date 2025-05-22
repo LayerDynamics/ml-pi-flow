@@ -4,7 +4,8 @@ import pandas as pd
 
 def get_mlflow_metrics():
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
-    experiments = client.list_experiments()
+    # Use search_experiments instead of list_experiments (for MLflow compatibility)
+    experiments = client.search_experiments()
     data = []
     for exp in experiments:
         runs = client.search_runs(exp.experiment_id)
@@ -15,7 +16,8 @@ def get_mlflow_metrics():
 
 def get_mlflow_experiment_names():
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
-    experiments = client.list_experiments()
+    # Use search_experiments instead of list_experiments (for MLflow compatibility)
+    experiments = client.search_experiments()
     return [exp.name for exp in experiments]
 
 def get_mlflow_run_ids(experiment_name):

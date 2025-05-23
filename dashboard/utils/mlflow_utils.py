@@ -159,7 +159,8 @@ def get_tensorboard_logdir_for_run(run_id):
 
 
 def get_ge_report_for_run(run_id):
-    # Assume GE report HTMLs are named with run_id in /shared_data/great_expectations/validations
+    # Assume GE report HTMLs are named with run_id in
+    # /shared_data/great_expectations/validations
     reports_dir = "/shared_data/great_expectations/validations"
     for root, _, files in os.walk(reports_dir):
         for file in files:
@@ -177,4 +178,3 @@ def get_gitea_commit_link_for_run(run_id):
         # Replace with your Gitea repo URL
         return f"http://localhost:3000/youruser/yourrepo/commit/{commit}"
     return None
-

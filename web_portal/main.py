@@ -43,7 +43,9 @@ async def get_component(name: str, request: Request):
     ]
     if name not in valid_components:
         name = "mlflow"
-    return templates.TemplateResponse(f"components/{name}.html", {"request": request})
+    return templates.TemplateResponse(
+        f"components/{name}.html", {"request": request}
+    )
 
 
 @app.websocket("/ws")

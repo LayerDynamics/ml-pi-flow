@@ -12,8 +12,11 @@ def get_mlflow_metrics():
         runs = client.search_runs(exp.experiment_id)
         for run in runs:
             metrics = run.data.metrics
-            data.append({"Experiment": exp.name, "Run ID": run.info.run_id,
-                         **metrics})
+            data.append({
+                "Experiment": exp.name,
+                "Run ID": run.info.run_id,
+                **metrics
+            })
     return pd.DataFrame(data)
 
 

@@ -17,7 +17,8 @@ def get_ge_reports():
                     reports.append({
                         "name": title,
                         "link": path.replace(
-                            "/home/ryan/ml_platform/", "http://localhost:5050/"),
+                            "/home/pi/ml_platform/", 
+                            "http://localhost:5050/"),
                         "status": status,
                     })
     return reports

@@ -56,6 +56,6 @@ st_autorefresh(interval=10000)  # Refresh every 10 seconds
 
 # Interactive Visualizations
 st.header("📊 Interactive Visualizations")
-fig = px.line(mlflow_metrics_df, x="Run ID", y="metric_name", 
+fig = px.line(mlflow_metrics_df, x="Run ID", y="metric_name",
               title="MLflow Metrics Over Time")
 st.plotly_chart(fig)

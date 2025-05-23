@@ -1,0 +1,6 @@
+{
+  "tasks": {
+    "build": "docker-compose up -d --build",
+    "test": "pip install flake8 yamllint && flake8 . && yamllint -c .yamllint.yml ."
+  }
+}

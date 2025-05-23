@@ -9,5 +9,6 @@ def vector_db_stats():
     for col in collections:
         col_name = col["name"]
         col_info = requests.get(f"{url}/{col_name}").json()
-        stats[col_name] = {"embeddings_count": col_info["count"], "dimension": col_info["dimension"]}
+        stats[col_name] = {"embeddings_count": col_info["count"],
+                           "dimension": col_info["dimension"]}
     return stats

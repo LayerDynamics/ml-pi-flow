@@ -1,2 +1,45 @@
-<iframe src="http://localhost:5000" frameborder="0" style="width:100%; height:90vh;">
+<iframe src="http://localhost:5000" frameborder="0" style="width:100%; height:70vh;">
 </iframe>
+
+<div style="padding: 1em;">
+  <h4>Advanced Actions</h4>
+  <form id="trigger-run-form" hx-post="/api/mlflow/trigger_run" hx-target="#mlflow-action-feedback" hx-swap="innerHTML">
+    <label>Experiment Name: <input type="text" name="experiment_name" required></label>
+    <label>Parameters (JSON): <input type="text" name="params" placeholder='{"param1": 1}'></label>
+    <button type="submit">Trigger New Run</button>
+  </form>
+  <form id="upload-artifact-form" enctype="multipart/form-data" hx-post="/api/mlflow/upload_artifact" hx-target="#mlflow-action-feedback" hx-swap="innerHTML" style="margin-top:1em;">
+    <label>Run ID: <input type="text" name="run_id" required></label>
+    <label>Artifact File: <input type="file" name="artifact_file" required></label>
+    <button type="submit">Upload Artifact</button>
+  </form>
+  <button hx-post="/api/labelstudio/sync_to_mlflow" hx-target="#mlflow-action-feedback" style="margin-top:1em;">Sync Data from Label Studio</button>
+  <div id="mlflow-action-feedback" style="margin-top:1em;"></div>
+</div>
+
+<div style="padding: 1em;">
+  <h4>Related</h4>
+  <label for="related-run-id">Run ID:</label>
+  <input type="text" id="related-run-id" placeholder="Enter MLflow Run ID" style="margin-bottom:0.5em;">
+  <ul id="related-links">
+    <li><a href="/component/tensorboard" hx-get="/component/tensorboard" hx-target="#content">View TensorBoard for this run</a></li>
+    <li><a href="/component/great_expectations" hx-get="/component/great_expectations" hx-target="#content">View Data Validation (Great Expectations)</a></li>
+    <li><a href="/component/gitea" hx-get="/component/gitea" hx-target="#content">View Code Commit (Gitea)</a></li>
+  </ul>
+</div>
+<script>
+// Dynamically update related links with the entered Run ID
+const runIdInput = document.getElementById('related-run-id');
+const relatedLinks = document.getElementById('related-links');
+const baseLinks = [
+  { label: 'View TensorBoard for this run', path: '/component/tensorboard?run_id=' },
+  { label: 'View Data Validation (Great Expectations)', path: '/component/great_expectations?run_id=' },
+  { label: 'View Code Commit (Gitea)', path: '/component/gitea?run_id=' }
+];
+runIdInput.addEventListener('input', function() {
+  const runId = runIdInput.value.trim();
+  relatedLinks.innerHTML = baseLinks.map(link =>
+    `<li><a href="${link.path}${encodeURIComponent(runId)}" hx-get="${link.path}${encodeURIComponent(runId)}" hx-target="#content">${link.label}</a></li>`
+  ).join('');
+});
+</script>

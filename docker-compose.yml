@@ -5,8 +5,8 @@ services:
     image: nginx:alpine
     container_name: nginx_proxy
     ports:
-      - "80:80"
-      - "443:443"
+      - "8880:80"
+      - "8881:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/certs:/etc/letsencrypt:ro
@@ -30,7 +30,8 @@ services:
       --email ${CERTBOT_EMAIL}
       --agree-tos
       --no-eff-email
-      -d ${DOMAIN}
+      --staging
+      -d ${DOMAIN} || echo "Certificate generation skipped - development environment"
     restart: "no"
 
   mlflow:
@@ -40,14 +41,16 @@ services:
       - "5000:5000"
     volumes:
       - mlflow_data:/mlflow
+      - postgres_data:/var/lib/postgresql/data:ro
+      - shared_data:/shared_data
     environment:
-      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
+      - MLFLOW_TRACKING_URI=${DATABASE_URL}
     command: >
       mlflow server
       --host 0.0.0.0
       --port 5000
-      --backend-store-uri sqlite:///mlflow/mlflow.db
-      --default-artifact-root /mlflow/artifacts
+      --backend-store-uri ${DATABASE_URL}
+      --default-artifact-root /shared_data/mlflow_artifacts
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000"]
       interval: 30s
@@ -56,17 +59,19 @@ services:
     restart: unless-stopped
 
   tensorboard:
-    image: tensorflow/tensorflow:2.15.0
+    image: python:3.9-slim
     container_name: tensorboard
     ports:
       - "6006:6006"
     volumes:
       - tensorboard_logs:/logs
+      - postgres_data:/var/lib/postgresql/data:ro
     command: >
-      tensorboard
-      --logdir=/logs
-      --host=0.0.0.0
-      --port=6006
+      bash -c "pip install tensorboard>=2.9.0 && 
+      python -m tensorboard.main 
+      --logdir=/logs 
+      --host=0.0.0.0 
+      --port=6006"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6006"]
       interval: 30s
@@ -81,9 +86,12 @@ services:
       - "8000:8000"
     volumes:
       - chroma_data:/data
+      - postgres_data:/var/lib/postgresql/data:ro
+      - shared_data:/shared_data
     environment:
       - IS_PERSISTENT=true
       - PERSIST_DIRECTORY=/data
+      - DATABASE_URL=${DATABASE_URL}
     restart: unless-stopped
 
   label_studio:
@@ -93,12 +101,14 @@ services:
       - "${LABEL_STUDIO_PORT}:${LABEL_STUDIO_PORT}"
     volumes:
       - label_studio_data:/label-studio/data
+      - postgres_data:/var/lib/postgresql/data:ro
+      - shared_data:/shared_data
     environment:
       - LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=${LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED}
       - LABEL_STUDIO_HOST=${LABEL_STUDIO_HOST}
       - LABEL_STUDIO_PORT=${LABEL_STUDIO_PORT}
       - LABEL_STUDIO_API_KEY=${LABEL_STUDIO_API_KEY}
-    user: "1000:1000"
+      - DATABASE_URL=${DATABASE_URL}
     command: >
       label-studio start
       --port ${LABEL_STUDIO_PORT}
@@ -114,10 +124,15 @@ services:
       - "4000:4000"
     volumes:
       - great_expectations_data:/app/great_expectations
+      - postgres_data:/var/lib/postgresql/data:ro
+      - shared_data:/shared_data
     working_dir: /app/great_expectations
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
     command: >
       /bin/bash -c "
-      great_expectations docs build &&
+      which great_expectations || pip install great_expectations &&
+      great_expectations docs build || mkdir -p uncommitted/data_docs/local_site &&
       cd uncommitted/data_docs/local_site &&
       python3 -m http.server 4000 --bind 0.0.0.0
       "
@@ -132,6 +147,10 @@ services:
       - "9000:9000"
     volumes:
       - ./dashboard:/app
+      - postgres_data:/var/lib/postgresql/data:ro
+      - shared_data:/shared_data
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
     command: streamlit run app.py --server.port=9000 --server.address=0.0.0.0
     restart: unless-stopped
 
@@ -144,6 +163,10 @@ services:
       - "9090:9090"
     volumes:
       - ./web_portal:/app
+      - postgres_data:/var/lib/postgresql/data:ro
+      - shared_data:/shared_data
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
     command: uvicorn main:app --host 0.0.0.0 --port 9090
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9090"]
@@ -152,12 +175,52 @@ services:
       retries: 3
     restart: unless-stopped
 
+  gitea:
+    image: docker.gitea.com/gitea:1.23.8
+    container_name: gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__server__ROOT_URL=http://localhost:8880/gitea/
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=postgres:5432
+      - GITEA__database__NAME=mlpi_db
+      - GITEA__database__USER=mlpi
+      - GITEA__database__PASSWD=mlpi_pass
+    depends_on:
+      - postgres
+    restart: always
+    ports:
+      - "3000:3000"
+      - "222:22"
+    volumes:
+      - gitea_data:/data
+      - postgres_data:/var/lib/postgresql/data:ro
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+  postgres:
+    image: postgres:14
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=mlpi
+      - POSTGRES_PASSWORD=mlpi_pass
+      - POSTGRES_DB=mlpi_db
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
 volumes:
   mlflow_data:
   tensorboard_logs:
   chroma_data:
   label_studio_data:
   great_expectations_data:
+  gitea_data:
+  postgres_data:
+  shared_data:
 
 networks:
   default:

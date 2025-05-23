@@ -16,7 +16,8 @@ def get_ge_reports():
                     status = "Success" if "Success" in title else "Failure"
                     reports.append({
                         "name": title,
-                        "link": path.replace("/home/ryan/ml_platform/", "http://localhost:5050/"),
+                        "link": path.replace(
+                            "/home/ryan/ml_platform/", "http://localhost:5050/"),
                         "status": status,
                     })
     return reports

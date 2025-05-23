@@ -24,16 +24,27 @@ app.add_middleware(
 # In-memory storage for notifications
 notifications: List[str] = []
 
+
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "notifications": notifications})
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "notifications": notifications}
+    )
+
 
 @app.get("/component/{name}", response_class=HTMLResponse)
 async def get_component(name: str, request: Request):
-    valid_components = ["mlflow", "tensorboard", "vector_db", "label_studio", "great_expectations"]
+    valid_components = [
+        "mlflow",
+        "tensorboard",
+        "vector_db",
+        "label_studio",
+        "great_expectations",
+    ]
     if name not in valid_components:
         name = "mlflow"
     return templates.TemplateResponse(f"components/{name}.html", {"request": request})
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

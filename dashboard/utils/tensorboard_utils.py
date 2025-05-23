@@ -1,6 +1,7 @@
 import os
 import pandas as pd
-from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+from tensorboard.backend.event_processing.event_accumulator import \
+    EventAccumulator
 
 LOG_DIR = "/home/ryan/ml_platform/tensorboard/logs"
 

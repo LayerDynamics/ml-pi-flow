@@ -12,14 +12,17 @@ def get_mlflow_metrics():
         runs = client.search_runs(exp.experiment_id)
         for run in runs:
             metrics = run.data.metrics
-            data.append({"Experiment": exp.name, "Run ID": run.info.run_id, **metrics})
+            data.append({"Experiment": exp.name, "Run ID": run.info.run_id,
+                         **metrics})
     return pd.DataFrame(data)
+
 
 def get_mlflow_experiment_names():
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
     # Use search_experiments instead of list_experiments (for MLflow compatibility)
     experiments = client.search_experiments()
     return [exp.name for exp in experiments]
+
 
 def get_mlflow_run_ids(experiment_name):
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
@@ -29,7 +32,8 @@ def get_mlflow_run_ids(experiment_name):
         return [run.info.run_id for run in runs]
     else:
         return []
-    
+
+
 def get_mlflow_run_metrics(experiment_name, run_id):
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
     run = client.get_run(run_id)
@@ -37,7 +41,8 @@ def get_mlflow_run_metrics(experiment_name, run_id):
         return run.data.metrics
     else:
         return {}
-    
+
+
 def get_mlflow_run_params(experiment_name, run_id):
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
     run = client.get_run(run_id)
@@ -45,7 +50,8 @@ def get_mlflow_run_params(experiment_name, run_id):
         return run.data.params
     else:
         return {}
-    
+
+
 def get_mlflow_run_tags(experiment_name, run_id):
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
     run = client.get_run(run_id)
@@ -53,6 +59,8 @@ def get_mlflow_run_tags(experiment_name, run_id):
         return run.data.tags
     else:
         return {}
+
+
 def get_mlflow_run_artifacts(experiment_name, run_id):
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
     run = client.get_run(run_id)
@@ -60,7 +68,8 @@ def get_mlflow_run_artifacts(experiment_name, run_id):
         return run.data.tags
     else:
         return {}
-    
+
+
 def get_mlflow_run_info(experiment_name, run_id):
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
     run = client.get_run(run_id)
@@ -68,7 +77,8 @@ def get_mlflow_run_info(experiment_name, run_id):
         return run.info
     else:
         return {}
-    
+
+
 def get_mlflow_experiment_info(experiment_name):
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
     experiment = client.get_experiment_by_name(experiment_name)
@@ -76,6 +86,8 @@ def get_mlflow_experiment_info(experiment_name):
         return experiment
     else:
         return {}
+
+
 def get_mlflow_experiment_runs(experiment_name):
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
     experiment = client.get_experiment_by_name(experiment_name)
@@ -84,6 +96,8 @@ def get_mlflow_experiment_runs(experiment_name):
         return [run.info.run_id for run in runs]
     else:
         return []
+
+
 def get_mlflow_experiment_metrics(experiment_name):
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
     experiment = client.get_experiment_by_name(experiment_name)
@@ -95,6 +109,8 @@ def get_mlflow_experiment_metrics(experiment_name):
         return metrics
     else:
         return {}
+
+
 def get_mlflow_experiment_params(experiment_name):
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
     experiment = client.get_experiment_by_name(experiment_name)
@@ -106,6 +122,8 @@ def get_mlflow_experiment_params(experiment_name):
         return params
     else:
         return {}
+
+
 def get_mlflow_experiment_tags(experiment_name):
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
     experiment = client.get_experiment_by_name(experiment_name)
@@ -117,6 +135,8 @@ def get_mlflow_experiment_tags(experiment_name):
         return tags
     else:
         return {}
+
+
 def get_mlflow_experiment_artifacts(experiment_name):
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
     experiment = client.get_experiment_by_name(experiment_name)
@@ -128,12 +148,15 @@ def get_mlflow_experiment_artifacts(experiment_name):
         return artifacts
     else:
         return {}
+
+
 def get_tensorboard_logdir_for_run(run_id):
     # Assume logs are stored as /shared_data/tensorboard_logs/{run_id}
     logdir = f"/shared_data/tensorboard_logs/{run_id}"
     if os.path.exists(logdir):
         return logdir
     return None
+
 
 def get_ge_report_for_run(run_id):
     # Assume GE report HTMLs are named with run_id in /shared_data/great_expectations/validations
@@ -144,6 +167,7 @@ def get_ge_report_for_run(run_id):
                 return os.path.join(root, file)
     return None
 
+
 def get_gitea_commit_link_for_run(run_id):
     # Assume commit hash is logged as a tag in MLflow run
     client = mlflow.tracking.MlflowClient("http://localhost:5000")
@@ -153,3 +177,4 @@ def get_gitea_commit_link_for_run(run_id):
         # Replace with your Gitea repo URL
         return f"http://localhost:3000/youruser/yourrepo/commit/{commit}"
     return None
+

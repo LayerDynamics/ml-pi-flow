@@ -6,6 +6,7 @@ from utils.tensorboard_utils import parse_tensorboard_logs
 from utils.vector_db_utils import vector_db_stats
 from utils.label_studio_utils import get_label_studio_stats
 from utils.great_expectations_utils import get_ge_reports
+from streamlit import st_autorefresh
 
 st.set_page_config(
     page_title="ML Platform Dashboard",
@@ -55,6 +56,6 @@ st_autorefresh(interval=10000)  # Refresh every 10 seconds
 
 # Interactive Visualizations
 st.header("📊 Interactive Visualizations")
-fig = px.line(mlflow_metrics_df, x="Run ID", y="metric_name", 
+fig = px.line(mlflow_metrics_df, x="Run ID", y="metric_name",
               title="MLflow Metrics Over Time")
 st.plotly_chart(fig)

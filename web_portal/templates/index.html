@@ -9,6 +9,14 @@
 </head>
 
 <body>
+    <header>
+        <div class="search-bar">
+            <input type="text" placeholder="Search...">
+        </div>
+        <div class="breadcrumb">
+            <a href="/">Home</a> / <span id="breadcrumb-path">Dashboard</span>
+        </div>
+    </header>
     <div class="sidebar">
         <h2>🛠️ ML Tools</h2>
         <button hx-get="/component/mlflow" hx-target="#content">MLflow</button>
@@ -16,13 +24,26 @@
         <button hx-get="/component/vector_db" hx-target="#content">VectorDB</button>
         <button hx-get="/component/label_studio" hx-target="#content">Label Studio</button>
         <button hx-get="/component/great_expectations" hx-target="#content">Great Expectations</button>
-        <button hx-get="/component/gitea" hx-target="#content">Gitea</button>
     </div>
 
     <div id="content" class="content">
         <h3>Welcome!</h3>
         <p>Select a tool from the sidebar to begin.</p>
     </div>
+
+    <div id="notifications" class="notifications">
+        <!-- Notifications will be dynamically added here -->
+    </div>
+
+    <script>
+        const ws = new WebSocket("ws://localhost:9090/ws");
+        ws.onmessage = function(event) {
+            const notification = document.createElement("div");
+            notification.className = "notification";
+            notification.innerText = event.data;
+            document.getElementById("notifications").appendChild(notification);
+        };
+    </script>
 </body>
 
 </html>

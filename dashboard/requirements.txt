@@ -5,3 +5,5 @@ tensorboard
 requests
 chromadb
 beautifulsoup4
+psutil
+plotly
